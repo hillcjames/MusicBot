@@ -2731,7 +2731,17 @@ class MusicBot(discord.Client):
                 handler_kwargs['guild'] = message.guild
 
             if params.pop('player', None):
-                handler_kwargs['player'] = await self.get_player(message.channel)
+                handler_kwargs['player'] = None
+                if handler.__name__ == self.cmd_play.__name__:
+                    if message.author.voice:
+                        handler_kwargs['player'] = await self.get_player(message.author.voice.channel, create=True, deserialize=self.config.persistent_queue)
+                    else:
+                        owner = self._get_owner(server=message.guild, voice=True)
+                        if owner and owner.voice:
+                            handler_kwargs['player'] = await self.get_player(owner.voice.channel, create=True, deserialize=self.config.persistent_queue)
+
+                if handler_kwargs['player'] == None:
+                    handler_kwargs['player'] = await self.get_player(message.channel)
 
             if params.pop('_player', None):
                 handler_kwargs['_player'] = self.get_player_in(message.guild)
